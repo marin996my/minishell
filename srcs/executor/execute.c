@@ -6,7 +6,7 @@
 /*   By: mafarino <mafarino@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/05 15:57:50 by mafarino          #+#    #+#             */
-/*   Updated: 2026/02/08 16:11:37 by mafarino         ###   ########.fr       */
+/*   Updated: 2026/02/08 17:28:12 by mmorente         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,9 +71,9 @@ int			exec_builtin(t_cmd *cmd, t_env *env)
 	(void) env;
 	if (!cmd || !cmd->args || !cmd->args[0])
 		return (1);
-	/*if (ft_strncmp(cmd->args[0], "echo", 5) == 0)
+	if (ft_strncmp(cmd->args[0], "echo", 5) == 0)
 		return (builtin_echo(cmd->args));
-	if (ft_strncmp(cmd->args[0], "cd", 3) == 0)
+	/*if (ft_strncmp(cmd->args[0], "cd", 3) == 0)
 		return (builtin_cd(cmd->args, *env));
 	if (ft_strncmp(cmd->args[0], "pwd", 4) == 0)
 		return (builtin_pwd());
