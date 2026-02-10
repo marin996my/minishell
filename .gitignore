@@ -2,4 +2,4 @@
 ojs/*
 objs/
 *.o
-minishell
+./minishell

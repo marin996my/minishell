@@ -3,17 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mafarino <mafarino@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: mmorente <mmorente@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/31 15:46:38 by mafarino          #+#    #+#             */
-/*   Updated: 2026/01/31 16:03:18 by mafarino         ###   ########.fr       */
+/*   Updated: 2026/02/10 19:04:54 by mmorente         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
 #include "minishell.h"
 
-void		print_error(char *msg)
+void	print_error(char *msg)
 {
-    fprintf(stderr, "%s\n", msg);
+	fprintf(stderr, "%s\n", msg);
 }

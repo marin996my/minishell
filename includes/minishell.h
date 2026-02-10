@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mafarino <mafarino@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: mmorente <mmorente@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/30 16:02:01 by mafarino          #+#    #+#             */
-/*   Updated: 2026/02/08 17:39:38 by mmorente         ###   ########.fr       */
+/*   Updated: 2026/02/10 19:16:24 by mmorente         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 # include <fcntl.h>
 # include <errno.h>
 # include "../libft/libft.h"
+#include <sys/stat.h>
 
 typedef enum e_token_type
 {
@@ -161,15 +162,15 @@ int			handle_heredoc(char *delimiter);//--
 
 bool		is_builtin(char *cmd);//---
 
-int			exec_builtin(t_cmd *cmd, t_env *env);//---
+int			exec_builtin(t_cmd *cmd, t_minishell *shell);//---
 
 int			builtin_echo(char **args);
-int			builtin_cd(char **args, t_env *env);
+int			builtin_cd(char **args);
 int			builtin_pwd(void);
 int			builtin_export(char **args, t_env **env);
 int			builtin_unset(char **args, t_env **env);
 int			builtin_env(t_env *env);
-int			builtin_exit(char **args, t_minishell *shell);
+int			builtin_exit(t_minishell *shell);
 
 
 char		*find_command_path(char *cmd, t_env *env);//--

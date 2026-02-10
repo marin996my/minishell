@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   free.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mafarino <mafarino@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: mmorente <mmorente@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 14:07:41 by mafarino          #+#    #+#             */
-/*   Updated: 2026/02/08 15:47:21 by mafarino         ###   ########.fr       */
+/*   Updated: 2026/02/10 19:04:10 by mmorente         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,14 +56,5 @@ void	print_all_commands(t_cmd *cmds)
 		print_command(cmds);
 		cmds = cmds->next;
 		i++;
-	}
-}
-
-void	print_all_env(t_env *env)
-{
-	while (env)
-	{
-		printf("key %s value %s\n", env->key, env->value);
-		env = env->next;
 	}
 }
