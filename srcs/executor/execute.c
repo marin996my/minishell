@@ -3,13 +3,12 @@
 /*                                                        :::      ::::::::   */
 /*   execute.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mafarino <mafarino@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/05 15:57:50 by mafarino          #+#    #+#             */
-/*   Updated: 2026/02/08 16:11:37 by mafarino         ###   ########.fr       */
+/*   Updated: 2026/02/21 12:19:05 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
 
 #include "minishell.h"
 
@@ -18,7 +17,7 @@
 /* ========================================================================== */
 
 /*
-** is_builtin -Checks whether the command is built-in
+** is_builtin - Checks whether the command is built-in
 **
 ** PARAMETERS:
 ** cmd: Command name
@@ -60,31 +59,30 @@ bool	is_builtin(char *cmd)
 ** exec_builtin - Executes a builtin command
 **
 ** PARAMETERS:
+** shell: Shell structure (para modificar exit_flag)
 ** cmd: Command to execute
-** env: Pointer to a pointer of environment variables
 **
 ** RETURN:
 ** Return code of the command (0 = success, 1+ = error)
 */
-int			exec_builtin(t_cmd *cmd, t_env *env)
+int	exec_builtin(t_minishell *shell, t_cmd *cmd)
 {
-	(void) env;
 	if (!cmd || !cmd->args || !cmd->args[0])
 		return (1);
-	/*if (ft_strncmp(cmd->args[0], "echo", 5) == 0)
+	if (ft_strncmp(cmd->args[0], "echo", 5) == 0)
 		return (builtin_echo(cmd->args));
-	if (ft_strncmp(cmd->args[0], "cd", 3) == 0)
-		return (builtin_cd(cmd->args, *env));
 	if (ft_strncmp(cmd->args[0], "pwd", 4) == 0)
 		return (builtin_pwd());
-	if (ft_strncmp(cmd->args[0], "export", 7) == 0)
-		return (builtin_export(cmd->args, env));
-	if (ft_strncmp(cmd->args[0], "unset", 6) == 0)
-		return (builtin_unset(cmd->args, env));
+	if (ft_strncmp(cmd->args[0], "cd", 3) == 0)
+		return (builtin_cd(cmd->args));
 	if (ft_strncmp(cmd->args[0], "env", 4) == 0)
-		return (builtin_env(*env));
+		return (builtin_env(shell->env, cmd->args));
 	if (ft_strncmp(cmd->args[0], "exit", 5) == 0)
-		return (builtin_exit(cmd->args));*/
+		return (builtin_exit(shell, cmd->args));
+	if (ft_strncmp(cmd->args[0], "export", 7) == 0)
+		return (builtin_export(cmd->args, &shell->env));
+	if (ft_strncmp(cmd->args[0], "unset", 6) == 0)
+		return (builtin_unset(cmd->args, &shell->env));
 	return (1);
 }
 
@@ -171,47 +169,46 @@ int	apply_redirections(t_redir *redirs)
 /*
 ** execute_single_command - Executes a single command without a pipe
 **
-**PARAMETERS:
-**cmd: Command to execute
-**env: Pointer to a pointer of environment variables
+** PARAMETERS:
+** shell: Shell structure
 **
-**RETURN:**
-**Return code of the command
+** RETURN:
+** Return code of the command
 **
-**ALGORITHM:**
-**1. Check if the command is not empty
-**2. If builtin – execute without fork
-**3. Otherwise – fork and execve
-**4. Apply redirections in the child process
-**5. Wait for the child process to complete
+** ALGORITHM:
+** 1. Check if the command is not empty
+** 2. If builtin – execute without fork
+** 3. Otherwise – fork and execve
+** 4. Apply redirections in the child process
+** 5. Wait for the child process to complete
 */
-static int	execute_single_command(t_cmd *cmd, t_env **env)
+static int	execute_single_command(t_minishell *shell)
 {
 	pid_t	pid;
 	int		status;
 	char	*path;
 	char	**envp;
 
-	if (!cmd || !cmd->args || !cmd->args[0])
+	if (!shell->commands || !shell->commands->args || !shell->commands->args[0])
 		return (0);
 	
 	// If it is a builtin command – execute in the current process
-	if (is_builtin(cmd->args[0]))
+	if (is_builtin(shell->commands->args[0]))
 	{
 		// Save the original stdin/stdout for restoration
 		int	saved_stdin = dup(STDIN_FILENO);
 		int	saved_stdout = dup(STDOUT_FILENO);
 		
 		// Apply redirections
-		if (apply_redirections(cmd->redirs) < 0)
+		if (apply_redirections(shell->commands->redirs) < 0)
 		{
 			close(saved_stdin);
 			close(saved_stdout);
 			return (1);
 		}
 		
-		// Execute builtin
-		status = exec_builtin(cmd, *env);
+		// Execute builtin (ahora pasamos shell para que pueda modificar exit_flag)
+		status = exec_builtin(shell, shell->commands);
 		
 		// Restore stdin/stdout
 		dup2(saved_stdin, STDIN_FILENO);
@@ -239,26 +236,26 @@ static int	execute_single_command(t_cmd *cmd, t_env **env)
 		signal(SIGQUIT, SIG_DFL);
 		
 		// Apply redirections
-		if (apply_redirections(cmd->redirs) < 0)
+		if (apply_redirections(shell->commands->redirs) < 0)
 			exit(1);
 		
 		// Search for the command path
-		path = find_command_path(cmd->args[0], *env);
+		path = find_command_path(shell->commands->args[0], shell->env);
 		if (!path)
 		{
 			ft_putstr_fd("minishell: ", 2);
-			ft_putstr_fd(cmd->args[0], 2);
+			ft_putstr_fd(shell->commands->args[0], 2);
 			ft_putstr_fd(": command not found\n", 2);
 			exit(127);
 		}
 		
 		// Convert env to an array for execve
-		envp = env_to_array(*env);
+		envp = env_to_array(shell->env);
 		if (!envp)
 			exit(1);
 		
 		// Execute the command
-		execve(path, cmd->args, envp);
+		execve(path, shell->commands->args, envp);
 		
 		// If execve returns – an error occurred
 		perror("execve");
@@ -351,8 +348,7 @@ char **env_to_array(t_env *env)
 ** execute_pipeline – Executes multiple commands with pipes
 **
 ** PARAMETERS:
-** cmds: List of commands
-** env: Pointer to pointer of environment variables
+** shell: Shell structure
 **
 ** RETURN:
 ** Return code of the last command
@@ -372,7 +368,7 @@ char **env_to_array(t_env *env)
 ** - Wait for all child processes
 ** 4. Return the code of the last command
 */
-static int	execute_pipeline(t_cmd *cmds, t_env **env)
+static int	execute_pipeline(t_minishell *shell)
 {
 	int		num_cmds;
 	int		**pipes;
@@ -381,7 +377,7 @@ static int	execute_pipeline(t_cmd *cmds, t_env **env)
 	int		status;
 	t_cmd	*current;
 
-	num_cmds = count_commands(cmds);
+	num_cmds = count_commands(shell->commands);
 	
 	// Create an array of pipes (num_cmds - 1 pipes)
 	pipes = malloc(sizeof(int *) * (num_cmds - 1));
@@ -413,7 +409,7 @@ static int	execute_pipeline(t_cmd *cmds, t_env **env)
 	}
 	
 	// Execute each command
-	current = cmds;
+	current = shell->commands;
 	i = 0;
 	while (current)
 	{
@@ -437,7 +433,7 @@ static int	execute_pipeline(t_cmd *cmds, t_env **env)
 		{
 			// Child process
 			
-			//Restore default signal behavior
+			// Restore default signal behavior
 			signal(SIGINT, SIG_DFL);
 			signal(SIGQUIT, SIG_DFL);
 			
@@ -467,12 +463,16 @@ static int	execute_pipeline(t_cmd *cmds, t_env **env)
 			// Execute the command
 			if (is_builtin(current->args[0]))
 			{
-				status = exec_builtin(current, *env);
+				// En pipelines, builtins se ejecutan en el child
+				// No pueden modificar el shell del padre
+				t_minishell temp_shell = *shell;
+				temp_shell.commands = current;
+				status = exec_builtin(&temp_shell, current);
 				exit(status);
 			}
 			else
 			{
-				char *path = find_command_path(current->args[0], *env);
+				char *path = find_command_path(current->args[0], shell->env);
 				if (!path)
 				{
 					ft_putstr_fd("minishell: ", 2);
@@ -481,7 +481,7 @@ static int	execute_pipeline(t_cmd *cmds, t_env **env)
 					exit(127);
 				}
 				
-				char **envp = env_to_array(*env);
+				char **envp = env_to_array(shell->env);
 				if (!envp)
 					exit(1);
 				
@@ -528,11 +528,10 @@ static int	execute_pipeline(t_cmd *cmds, t_env **env)
 /* ========================================================================== */
 
 /*
-** execute_commands - Главная функция выполнения команд
+** execute_commands - Main command execution function
 **
 ** PARAMETERS:
-** cmds: List of commands to execute
-** env: Environment variables
+** shell: Shell structure with commands to execute
 **
 ** RETURN:
 ** Return code of the last command
@@ -553,82 +552,26 @@ static int	execute_pipeline(t_cmd *cmds, t_env **env)
 **
 ** EXAMPLE 3: Builtin
 ** Input: "cd /home"
-** → Executed without fork в execute_single_command()
+** → Executed without fork in execute_single_command()
 **
 ** EXAMPLE 4: Redirection
 ** Input: "cat < in.txt > out.txt"
-** → execute_single_command() с применением редиректов
+** → execute_single_command() with redirections applied
 */
-int	execute_commands(t_cmd *cmds, t_env *env)
+int	execute_commands(t_minishell *shell)
 {
-	t_env	**env_ptr;
-
-	if (!cmds)
+	if (!shell->commands)
 		return (0);
 	
-	// We create a pointer to a pointer to modify env in built-ins
-	env_ptr = &env;
-	
-	// We check whether there is a pipe (multiple commands)
-	if (cmds->next)
+	// Check whether there is a pipe (multiple commands)
+	if (shell->commands->next)
 	{
 		// Pipeline - multiple commands
-		return (execute_pipeline(cmds, env_ptr));
+		return (execute_pipeline(shell));
 	}
 	else
 	{
-		//Single command
-		return (execute_single_command(cmds, env_ptr));
+		// Single command
+		return (execute_single_command(shell));
 	}
 }
-
-/* ========================================================================== */
-/*                     USAGE EXAMPLES                                         */
-/* ========================================================================== */
-
-/*
-** EXAMPLE 1: Usage in main.c
-**
-** void process_line(t_minishell *shell)
-** {
-**     t_token *tokens;
-**     
-**     // Tokenization
-**     tokens = tokenize(shell->line);
-**     if (!tokens)
-**         return;
-**     
-**     // Parsing
-**     shell->commands = parse_tokens(tokens, shell->env);
-**     free_tokens(tokens);
-**     
-**     if (!shell->commands)
-**         return;
-**     
-**     // Execution
-**     shell->exit_code = execute_commands(shell->commands, shell->env);
-**     
-**     // Cleanup
-**     free_commands(shell->commands);
-**     shell->commands = NULL;
-** }
-*/
-
-/*
-** EXAMPLE 2: Testing
-**
-** int main(void)
-** {
-**     t_env *env = init_env(envp);
-**     t_cmd *cmd = create_cmd();
-**     
-**     add_arg(cmd, "echo");
-**     add_arg(cmd, "Hello World");
-**     
-**     int exit_code = execute_commands(cmd, env);
-**     printf("Exit code: %d\n", exit_code);
-**     
-**     free_commands(cmd);
-**     free_env(env);
-** }
-*/

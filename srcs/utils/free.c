@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   free.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mafarino <mafarino@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: mmorente <mmorente@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/04 14:07:41 by mafarino          #+#    #+#             */
-/*   Updated: 2026/02/08 15:47:21 by mafarino         ###   ########.fr       */
+/*   Updated: 2026/02/10 19:04:10 by mmorente         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,11 +59,18 @@ void	print_all_commands(t_cmd *cmds)
 	}
 }
 
-void	print_all_env(t_env *env)
+
+void    ft_free_double_ptr(void **ptr_array)
 {
-	while (env)
-	{
-		printf("key %s value %s\n", env->key, env->value);
-		env = env->next;
-	}
+    int i;
+
+    if (!ptr_array)
+        return;
+    i = 0;
+    while (ptr_array[i])
+    {
+        free(ptr_array[i]);
+        i++;
+    }
+    free(ptr_array);
 }

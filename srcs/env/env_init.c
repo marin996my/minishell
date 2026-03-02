@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   env_init.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mafarino <mafarino@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/30 16:01:32 by mafarino          #+#    #+#             */
-/*   Updated: 2026/02/08 15:38:43 by mafarino         ###   ########.fr       */
+/*   Updated: 2026/02/21 12:24:06 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ static t_env	*create_env_node(char *key, char *value)
 		free(node);
 		return (NULL);
 	}
+	node->exported = true;
 	node->next = NULL;
 	return (node);
 }
@@ -157,6 +158,7 @@ bool	set_env_value(t_env **env, char *key, char *value)
 	new_node = create_env_node(key, value);
 	if (!new_node)
 		return (false);
+	new_node->exported = false;
 	add_env_to_list(env, new_node);
 	return (true);
 }
@@ -174,7 +176,7 @@ bool	unset_env_value(t_env **env, char *key)
 	prev = NULL;
 	while (current)
 	{
-		if (ft_strncmp(current->key, key, key_len + 1) == 0)
+		if (ft_strncmp(current->key, key, key_len) == 0)
 		{
 			if (prev)
 				prev->next = current->next;

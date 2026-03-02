@@ -3,12 +3,13 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mafarino <mafarino@student.42malaga.com    +#+  +:+       +#+        */
+/*   By: marvin <marvin@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/30 16:02:01 by mafarino          #+#    #+#             */
-/*   Updated: 2026/02/08 16:06:28 by mafarino         ###   ########.fr       */
+/*   Updated: 2026/02/21 12:19:57 by marvin           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
 
 
 #ifndef MINISHELL_H
@@ -25,6 +26,7 @@
 # include <fcntl.h>
 # include <errno.h>
 # include "../libft/libft.h"
+#include <sys/stat.h>
 
 typedef enum e_token_type
 {
@@ -66,10 +68,10 @@ typedef enum e_redir_type
 
 typedef struct s_redir
 {
-	t_redir_type	type;	
-	char			*file;	
-	int				fd;			
-	struct s_redir	*next;		
+	t_redir_type	type;
+	char			*file;
+	int				fd;
+	struct s_redir	*next;
 }	t_redir;
 
 
@@ -85,9 +87,10 @@ typedef struct s_cmd
 
 typedef struct s_env
 {
-	char			*key;		// "USER", "HOME", "PATH"
-	char			*value;		//"student", "/home/student"
-	struct s_env	*next;	
+	char	*key;// "USER", "HOME", "PATH"
+	char	*value; //"student", "/home/student"
+	bool	exported;
+	struct s_env	*next;
 }	t_env;
 
 typedef struct s_minishell
@@ -136,6 +139,7 @@ void		free_commands(t_cmd *cmds);
 void	print_all_commands(t_cmd *cmds);//++++
 void	print_command(t_cmd *cmd);//++++
 void	print_all_env(t_env *env);//+++
+bool	set_env_value(t_env **env, char *key, char *value);
 
 char		*process_quotes(char *str);
 
@@ -143,7 +147,7 @@ bool		check_quotes(char *str);//+++
 
 /* ==================== (PARTNER 2) ==================== */
 
-int			execute_commands(t_cmd *cmds, t_env *env);//--
+int			execute_commands(t_minishell *shell);//--
 
 int			setup_pipes(t_cmd *cmds);
 
@@ -161,15 +165,15 @@ int			handle_heredoc(char *delimiter);//--
 
 bool		is_builtin(char *cmd);//---
 
-int			exec_builtin(t_cmd *cmd, t_env *env);//---
+int			exec_builtin(t_minishell *shell, t_cmd *cmd);//---
 
 int			builtin_echo(char **args);
-int			builtin_cd(char **args, t_env *env);
+int			builtin_cd(char **args);
 int			builtin_pwd(void);
 int			builtin_export(char **args, t_env **env);
 int			builtin_unset(char **args, t_env **env);
-int			builtin_env(t_env *env);
-int			builtin_exit(char **args, t_minishell *shell);
+int			builtin_env(t_env *env, char **args);
+int			builtin_exit(t_minishell *shell, char **args);
 
 
 char		*find_command_path(char *cmd, t_env *env);//--
@@ -194,6 +198,7 @@ void		sigquit_handler(int sig);//+++++
 
 
 void		print_error(char *msg);//++++
+void		ft_free_double_ptr(void **ptr_array);
 
 
 
