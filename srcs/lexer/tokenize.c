@@ -6,7 +6,7 @@
 /*   By: mafarino <mafarino@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/30 16:03:12 by mafarino          #+#    #+#             */
-/*   Updated: 2026/02/08 15:41:57 by mafarino         ###   ########.fr       */
+/*   Updated: 2026/03/02 04:28:04 by mafarino         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -131,15 +131,16 @@ static char	*get_quoted_word(char *line, int *i, char quote)
 	int		len;
 	char	*word;
 
-	(*i)++;
 	start = *i;
+	(*i)++;
 	while (line[*i] && line[*i] != quote)
 		(*i)++;
 	if (line[*i] != quote)
 		return (NULL);
+	(*i)++;
 	len = *i - start;
 	word = ft_substr(line, start, len);
-	(*i)++;
+
 	return (word);
 }
 

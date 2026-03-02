@@ -6,80 +6,89 @@
 /*   By: mafarino <mafarino@student.42malaga.com    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/30 16:03:41 by mafarino          #+#    #+#             */
-/*   Updated: 2026/02/08 15:44:22 by mafarino         ###   ########.fr       */
+/*   Updated: 2026/03/02 04:56:30 by mafarino         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static char	*get_var_name(char *str)
-{
-	int		i;
-
-	if (str[0] == '?')
-		return (ft_strdup("?"));
-	i = 0;
-	while (str[i] && (ft_isalnum(str[i]) || str[i] == '_'))
-		i++;
-	if (i == 0)
-		return (ft_strdup(""));
-	return (ft_substr(str, 0, i));
-}
-
-static char	*expand_single_var(char *str, char *dollar, t_env *env, int exit_code)
-{
-	char	*before;
-	char	*var_name;
-	char	*var_value;
-	char	*after;
-	char	*result;
-	char	*tmp;
-
-	before = ft_substr(str, 0, dollar - str);
-	var_name = get_var_name(dollar + 1);
-	if (ft_strncmp(var_name, "?", 2) == 0)
-		var_value = ft_itoa(exit_code);
-	else
-	{
-		var_value = get_env_value(env, var_name);
-		if (var_value)
-			var_value = ft_strdup(var_value);
-		else
-			var_value = ft_strdup("");
-	}
-	after = ft_strdup(dollar + ft_strlen(var_name) + 1);
-	tmp = ft_strjoin(before, var_value);
-	result = ft_strjoin(tmp, after);
-	free(before);
-	free(var_name);
-	free(var_value);
-	free(after);
-	free(tmp);
-	return (result);
-}
-
 char	*expand_variables(char *str, t_env *env, int exit_code)
 {
 	char	*result;
-	char	*dollar;
-	char	*tmp;
+	char	quote;
+	int		i;
+	int		j;
 
 	if (!str)
 		return (NULL);
-	result = ft_strdup(str);
+	
+	result = malloc(ft_strlen(str) * 200 + 1);
 	if (!result)
 		return (NULL);
-	while (1)
+	
+	i = 0;
+	j = 0;
+	quote = 0;
+	
+	while (str[i])
 	{
-		dollar = ft_strchr(result, '$');
-		if (!dollar)
-			break;
-		tmp = expand_single_var(result, dollar, env, exit_code);
-		free(result);
-		if (!tmp)
-			return (NULL);
-		result = tmp;
+		if ((str[i] == '\'' || str[i] == '"') && !quote)
+		{
+			quote = str[i];  
+			i++;
+			continue;
+		}
+		else if (str[i] == quote)
+		{
+			quote = 0; 
+			i++;
+			continue;
+		}
+		
+		if (str[i] == '$' && quote != '\'')
+		{			
+			i++; 
+			
+			int start = i;
+			
+			if (str[i] == '?')
+			{
+				char *exit_str = ft_itoa(exit_code);
+				int k = 0;
+				while (exit_str[k])
+					result[j++] = exit_str[k++];
+				free(exit_str);
+				i++;
+			}
+			else
+			{
+				while (str[i] && (ft_isalnum(str[i]) || str[i] == '_'))
+					i++;
+				
+				int var_len = i - start;
+				if (var_len > 0)
+				{
+					char *var_name = ft_substr(str, start, var_len);
+					char *var_value = get_env_value(env, var_name);
+					
+					if (var_value)
+					{
+						int k = 0;
+						while (var_value[k])
+							result[j++] = var_value[k++];
+					}
+					
+					free(var_name);
+				}
+			}
+		}
+		else
+		{
+			result[j++] = str[i++];
+		}
 	}
+	
+	result[j] = '\0';
 	return (result);
 }
 
