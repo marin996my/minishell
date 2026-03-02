@@ -305,6 +305,9 @@ t_cmd	*parse_tokens(t_token *tokens, t_env *env)
 				free_commands(cmds);
 				return (NULL);
 			}
+			/* Save the redirection token type before advancing to the filename token */
+			t_token_type	redir_tok_type;
+			redir_tok_type = current_token->type;
 			current_token = current_token->next;
 			expanded = expand_variables(current_token->value, env, 0);
 			if (!expanded)
@@ -312,7 +315,7 @@ t_cmd	*parse_tokens(t_token *tokens, t_env *env)
 				free_commands(cmds);
 				return (NULL);
 			}
-			if (!add_redir(current_cmd, current_token->type - 2, expanded))
+			if (!add_redir(current_cmd, redir_tok_type - 2, expanded))
 			{
 				free(expanded);
 				free_commands(cmds);
